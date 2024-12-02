@@ -1,0 +1,36 @@
+{
+  "name": "ansible-dev-container-docker",
+
+  "image": "mcr.microsoft.com/devcontainers/python:1-3.12-bullseye",
+
+  "features": {
+    "ghcr.io/devcontainers/features/docker-in-docker:2": {}
+  },
+
+  "containerUser": "root",
+
+  "runArgs": [
+    "--privileged",
+    "--device",
+    "/dev/fuse",
+    "--hostname=ansible-dev-container"
+  ],
+
+  "remoteEnv": {
+    "ANSIBLE_ROLES_PATH": "/home/vscode/.ansible/roles:/usr/share/ansible/roles:/etc/ansible/roles:/workspace/collections/ansible_collections/ifalatik/aoc2024/roles"
+  },
+
+  "updateRemoteUserUID": true,
+
+  "customizations": {
+    "vscode": {
+      "extensions": ["redhat.ansible"]
+    }
+  },
+
+  "workspaceMount": "source=${localWorkspaceFolder},target=/workspace/collections/ansible_collections,type=bind",
+  "workspaceFolder": "/workspace/collections/ansible_collections",
+
+  "postCreateCommand": "pip3 install --user -r ./.devcontainer/requirements.txt",
+  "postAttachCommand": "ansible-galaxy install -r ./ifalatik/aoc2024/extensions/molecule/default/requirements.yml"
+}
