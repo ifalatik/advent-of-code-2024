@@ -7,9 +7,9 @@ jobs:
       - uses: actions/checkout@v2
         with:
           path: "${{ github.repository }}"
-      # Set ANSIBLE_ROLES_PATH to the directory where the roles are located
-      - name: Set ANSIBLE_ROLES_PATH
-        run: echo "ANSIBLE_ROLES_PATH=/${{ github.repository }}/ifalatik/aoc2024/roles" >> $GITHUB_ENV
+      # Copy roles
+      - name: Copy roles to directory used by molecule
+        run: cp -r ${{ github.repository }}/ifalatik/aoc2024/roles/ ${{ github.repository }}/ifalatik/aoc2024/extensions/molecule/default/
       - uses: gofrolist/molecule-action@v2
         with:
           molecule_working_dir: "${{ github.repository }}/ifalatik/aoc2024/extensions"
