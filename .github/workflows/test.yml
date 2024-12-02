@@ -9,7 +9,7 @@ jobs:
           path: "${{ github.repository }}"
       # Set ANSIBLE_ROLES_PATH to the directory where the roles are located
       - name: Set ANSIBLE_ROLES_PATH
-        run: echo "::set-env name=ANSIBLE_ROLES_PATH::${{ github.repository }}/ifalatik/aoc2024/roles"
+        run: echo "ANSIBLE_ROLES_PATH=${{ github.repository }}/ifalatik/aoc2024/roles" >> $GITHUB_ENV
       - uses: gofrolist/molecule-action@v2
         with:
           molecule_working_dir: "${{ github.repository }}/ifalatik/aoc2024/extensions"
