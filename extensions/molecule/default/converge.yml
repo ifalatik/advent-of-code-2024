@@ -45,3 +45,15 @@
       ansible.builtin.assert:
         that:
           - day2_output | int == 2
+
+    - name: Run day2 role for task2
+      ansible.builtin.include_role:
+        name: day2
+        tasks_from: task2.yml
+    - name: Read output
+      ansible.builtin.set_fact:
+        day2_output: "{{ lookup('file', 'out/day2_result2.txt') | trim }}"
+    - name: Assert correct value
+      ansible.builtin.assert:
+        that:
+          - day2_output | int == 4

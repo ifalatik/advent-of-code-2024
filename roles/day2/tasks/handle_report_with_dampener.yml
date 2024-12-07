@@ -1,0 +1,99 @@
+---
+
+- name: Initialize dampener_used variable
+  ansible.builtin.set_fact:
+    dampener_used: false
+  when: ansible_loop.first
+
+- name: Handle subsequent numbers to first
+  when: not ansible_loop.first and report_is_safe
+  block:
+    - name: Dampener used
+      when: dampener_used
+      block:
+        - name: Set report_is_safe to false if current_number equals previous number
+          ansible.builtin.set_fact:
+            report_is_safe: false
+          when: current_number == ansible_loop.previtem
+
+        - name: Dampener used not on previous iteration
+          when: dampener_used_on_index | int != (ansible_loop.index0 | int - 1)
+          block:
+            - name: Set report_is_safe to false if current_number is not greater than previous number or difference is greater than 3
+              ansible.builtin.set_fact:
+                report_is_safe: false
+              changed_when: true
+              when: report_is_increasing and
+                (not current_number | int > (ansible_loop.previtem | int) or
+                current_number | int - (ansible_loop.previtem | int) > 3)
+
+            - name: Set report_is_safe to false if current_number is not less than previous number or difference is greater than 3
+              ansible.builtin.set_fact:
+                report_is_safe: false
+              changed_when: true
+              when: not report_is_increasing and
+                (not current_number | int < (ansible_loop.previtem | int) or
+                (ansible_loop.previtem | int) - current_number | int > 3)
+
+        - name: Dampener used on previous iteration
+          when: dampener_used_on_index | int == (ansible_loop.index0 | int - 1)
+          block:
+            - name: Determine if report is increasing and dampener was used on second iteration
+              ansible.builtin.set_fact:
+                report_is_increasing: "{{ current_number | int > (ansible_loop.first | int) }}"
+              when: ansible_loop.index0 == 2
+
+            - name: Set report_is_safe to false if current_number is not greater than number previous to previous number or difference is greater than 3
+              ansible.builtin.set_fact:
+                report_is_safe: false
+              changed_when: true
+              when: report_is_increasing and
+                (not current_number | int > (ansible_loop.allitems[ansible_loop.index0 - 2] | int) or
+                current_number | int - (ansible_loop.allitems[ansible_loop.index0 - 2] | int) > 3)
+
+            - name: Set report_is_safe to false if current_number is not less than number previous to previous number or difference is greater than 3
+              ansible.builtin.set_fact:
+                report_is_safe: false
+              changed_when: true
+              when: not report_is_increasing and
+                (not current_number | int < (ansible_loop.allitems[ansible_loop.index0 - 2] | int) or
+                (ansible_loop.allitems[ansible_loop.index0 - 2] | int) - current_number | int > 3)
+
+    - name: Dampener not used
+      when: not dampener_used
+      block:
+        - name: Use dampener if current_number equals previous number
+          ansible.builtin.set_fact:
+            dampener_used: true
+            dampener_used_on_index: "{{ ansible_loop.index0 }}"
+          changed_when: true
+          when: current_number == ansible_loop.previtem
+
+        - name: Determine if report is increasing
+          ansible.builtin.set_fact:
+            report_is_increasing: "{{ current_number | int > (ansible_loop.previtem | int) }}"
+          when: ansible_loop.index0 == 1
+
+        - name: Use dampener if current_number is not greater than previous number or difference is greater than 3
+          ansible.builtin.set_fact:
+            dampener_used: true
+            dampener_used_on_index: "{{ ansible_loop.index0 }}"
+          changed_when: true
+          when: report_is_increasing and
+            (not current_number | int > (ansible_loop.previtem | int) or
+            current_number | int - (ansible_loop.previtem | int) > 3)
+
+        - name: Use dampener if current_number is not less than previous number or difference is greater than 3
+          ansible.builtin.set_fact:
+            dampener_used: true
+            dampener_used_on_index: "{{ ansible_loop.index0 }}"
+          changed_when: true
+          when: not report_is_increasing and
+            (not current_number | int < (ansible_loop.previtem | int) or
+            (ansible_loop.previtem | int) - current_number | int > 3)
+
+- name: Increment safe_reports if report is safe and this is the last loop iteration
+  ansible.builtin.set_fact:
+    safe_reports: "{{ safe_reports | int + 1 }}"
+  changed_when: true
+  when: report_is_safe and ansible_loop.last

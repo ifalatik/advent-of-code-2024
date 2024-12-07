@@ -1,0 +1,28 @@
+---
+
+- name: Read input
+  delegate_to: localhost
+  ifalatik.aoc2024.aoc_input:
+    day: 2
+    task_number: 2
+    single_input: true
+
+- name: Set number of safe reports to 0
+  ansible.builtin.set_fact:
+    safe_reports: 0
+
+# Iterate over each line of input (each report)
+- name: "Calculate number of safe reports"
+  ansible.builtin.include_tasks: calculate_safe_reports.yml
+  vars:
+    problem_dampener: true
+  with_list: "{{ input_lines_day2_task2 }}"
+  loop_control:
+    loop_var: report
+
+- name: Write result
+  delegate_to: localhost
+  ifalatik.aoc2024.aoc_result:
+    day: 2
+    task_number: 2
+    result: "{{ safe_reports }}"
