@@ -1,7 +1,7 @@
 ---
 
 - name: Handle subsequent numbers to first
-  when: not ansible_loop.first
+  when: not ansible_loop.first and report_is_safe
   block:
     - name: Set report_is_safe to false if current_number equals previous_number
       ansible.builtin.set_fact:
@@ -13,35 +13,21 @@
         report_is_increasing: "{{ current_number | int > (ansible_loop.previtem | int) }}"
       when: ansible_loop.index0 == 1
 
-    - name: Handle increasing reports
-      when: report_is_increasing
-      block:
-        - name: Set report_is_safe to false if current_number is not greater than previous_number
-          changed_when: true
-          ansible.builtin.set_fact:
-            report_is_safe: false
-          when: not current_number | int > (ansible_loop.previtem | int)
+    - name: Set report_is_safe to false if current_number is not greater than previous_number or difference is greater than 3
+      ansible.builtin.set_fact:
+        report_is_safe: false
+      changed_when: true
+      when: report_is_increasing and
+        (not current_number | int > (ansible_loop.previtem | int) or
+        current_number | int - (ansible_loop.previtem | int) > 3)
 
-        - name: Set report_is_safe to false if difference between current_number and previous_number is greater than 3
-          changed_when: true
-          ansible.builtin.set_fact:
-            report_is_safe: false
-          when: current_number | int - (ansible_loop.previtem | int) > 3
-
-    - name: Handle decreasing reports
-      when: not report_is_increasing
-      block:
-        - name: Set report_is_safe to false if current_number is not less than previous_number
-          changed_when: true
-          ansible.builtin.set_fact:
-            report_is_safe: false
-          when: not current_number | int < (ansible_loop.previtem | int)
-
-        - name: Set report_is_safe to false if difference between current_number and previous_number is greater than 3
-          changed_when: true
-          ansible.builtin.set_fact:
-            report_is_safe: false
-          when: (ansible_loop.previtem | int) - current_number | int > 3
+    - name: Set report_is_safe to false if current_number is not less than previous_number or difference is greater than 3
+      ansible.builtin.set_fact:
+        report_is_safe: false
+      changed_when: true
+      when: not report_is_increasing and
+        (not current_number | int < (ansible_loop.previtem | int) or
+        (ansible_loop.previtem | int) - current_number | int > 3)
 
 - name: Increment safe_reports if report is safe and this is the last loop iteration
   ansible.builtin.set_fact:
