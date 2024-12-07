@@ -15,7 +15,7 @@ jobs:
       - name: Install dependencies
         run: pip install -r collections/ansible_collections/ifalatik/aoc2024/.devcontainer/requirements.txt
       - name: Run molecule test
-        run: cd ${{ github.workspace }}/collections/ansible_collections/ifalatik/aoc2024/extensions/molecule && molecule test
+        run: cd ${{ github.workspace }}/collections/ansible_collections/ifalatik/aoc2024/extensions && molecule test
         env:
           ANSIBLE_COLLECTIONS_PATH: ${{ github.workspace }}/../../../:~/.ansible/collections:/usr/share/ansible/collections
           ANSIBLE_ROLES_PATH: ${{ github.workspace }}/roles:~/.ansible/roles:/usr/share/ansible/roles
