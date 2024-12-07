@@ -6,7 +6,7 @@ jobs:
     steps:
       - uses: actions/checkout@v2
         with:
-          path: "${{ github.repository }}"
+          path: "~/.ansible/collections/ansible_collections/ifalatik/aoc2024/${{ github.repository }}"
       - uses: gofrolist/molecule-action@v2
         with:
-          molecule_working_dir: "${{ github.repository }}/extensions"
+          molecule_working_dir: "~/.ansible/collections/ansible_collections/ifalatik/aoc2024/${{ github.repository }}/extensions"
