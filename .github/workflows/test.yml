@@ -6,9 +6,12 @@ jobs:
     steps:
       - uses: actions/checkout@v2
         with:
-          path: "ifalatik/aoc2024/${{ github.repository }}"
+          path: "collections/ansible_collections/ifalatik/aoc2024"
       # move molecule directory to the root of the repository
-      - run: mv "ifalatik/aoc2024/${{ github.repository }}/extensions/molecule" "ifalatik/aoc2024/${{ github.repository }}/molecule"
+      - run: mv "${{ github.workspace }}/extensions/molecule" "${{ github.workspace }}/molecule"
       - uses: gofrolist/molecule-action@v2
         with:
-          molecule_working_dir: "ifalatik/aoc2024/${{ github.repository }}"
+          molecule_working_dir: "${{ github.workspace }}"
+        env:
+          ANSIBLE_COLLECTIONS_PATH: ${{ github.workspace }}/../../../:~/.ansible/collections:/usr/share/ansible/collections
+          ANSIBLE_ROLES_PATH: ${{ github.workspace }}/roles:~/.ansible/roles:/usr/share/ansible/roles
