@@ -3,7 +3,7 @@
 - name: Solve day 1
   hosts: localhost
   gather_facts: false
-
+  tags: day1
   tasks:
     - name: Read day1 input
       ansible.builtin.set_fact:
@@ -20,3 +20,14 @@
         tasks_from: task2.yml
       vars:
         day1_input2: "{{ day1_input }}"
+
+
+- name: Solve day 2
+  hosts: localhost
+  gather_facts: false
+  tags: day2
+  tasks:
+    - name: Solve day 2 task 1
+      ansible.builtin.include_role:
+        name: day2
+        tasks_from: task1.yml

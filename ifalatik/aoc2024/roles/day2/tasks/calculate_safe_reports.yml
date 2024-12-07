@@ -1,0 +1,24 @@
+---
+
+- name: Print current number of safe_reports
+  changed_when: true
+  ansible.builtin.debug:
+    var: safe_reports
+
+- name: Print current report
+  changed_when: true
+  ansible.builtin.debug:
+    var: report
+
+- name: Initialize report safety variables
+  ansible.builtin.set_fact:
+    report_is_safe: true
+    previous_number: null
+
+- name: Check if report is safe
+  ansible.builtin.include_tasks: handle_report.yml
+  with_list: "{{ report | split(' ') }}"
+  loop_control:
+    loop_var: current_number
+    extended: true
+    break_when: not report_is_safe  # this doesn't properly work, as the loop continues after the first false

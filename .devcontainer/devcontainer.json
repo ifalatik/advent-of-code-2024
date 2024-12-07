@@ -17,7 +17,8 @@
   ],
 
   "remoteEnv": {
-    "ANSIBLE_ROLES_PATH": "/home/vscode/.ansible/roles:/usr/share/ansible/roles:/etc/ansible/roles:/workspace/collections/ansible_collections/ifalatik/aoc2024/roles"
+    "ANSIBLE_ROLES_PATH": "/home/vscode/.ansible/roles:/usr/share/ansible/roles:/etc/ansible/roles:/workspace/collections/ansible_collections/ifalatik/aoc2024/roles",
+    "ANSIBLE_COLLECTIONS_PATH": "/home/vscode/.ansible/collections:/usr/share/ansible/collections:/workspace/collections"
   },
 
   "updateRemoteUserUID": true,
