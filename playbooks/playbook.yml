@@ -1,0 +1,33 @@
+---
+
+- name: Solve day 1
+  hosts: localhost
+  gather_facts: false
+  tags: day1
+  tasks:
+    - name: Read day1 input
+      ansible.builtin.set_fact:
+        day1_input: "{{ lookup('file', 'day1_input.txt') }}"
+    - name: Run day1 role for task1
+      ansible.builtin.include_role:
+        name: day1
+        tasks_from: task1.yml
+      vars:
+        day1_input1: "{{ day1_input }}"
+    - name: Run day1 role for task2
+      ansible.builtin.include_role:
+        name: day1
+        tasks_from: task2.yml
+      vars:
+        day1_input2: "{{ day1_input }}"
+
+
+- name: Solve day 2
+  hosts: localhost
+  gather_facts: false
+  tags: day2
+  tasks:
+    - name: Solve day 2 task 1
+      ansible.builtin.include_role:
+        name: day2
+        tasks_from: task1.yml

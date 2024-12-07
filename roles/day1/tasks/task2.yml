@@ -1,0 +1,42 @@
+---
+
+- name: Assert input is correct
+  ansible.builtin.assert:
+    that:
+      - day1_input2
+      - day1_input2 is string
+      - day1_input2 | length > 0
+
+- name: Read input into list
+  ansible.builtin.set_fact:
+    input_lines: "{{ day1_input2.split('\n') }}"
+
+- name: Get list1
+  ansible.builtin.set_fact:
+    list1: "{{ input_lines | map('split', ' ') | map('first') | map('int') | list }}"
+
+- name: Get list2
+  ansible.builtin.set_fact:
+    list2: "{{ input_lines | map('split', ' ') | map('last') | map('int') | list }}"
+
+- name: Generate counter list for list2
+  ansible.builtin.set_fact:
+    counter_list: "{{ list2 | community.general.counter }}"
+
+- name: Calculate similarity score
+  ansible.builtin.set_fact:
+    similarity_score: "{{ similarity_score | default(0) | int + counter_list[item] | default(0) | int * item }}"
+  with_list: "{{ list1 }}"
+
+- name: Write result
+  delegate_to: localhost
+  block:
+    - name: Ensure output directory exists  # noqa: risky-file-permissions
+      ansible.builtin.file:
+        path: "{{ playbook_dir }}/out"
+        state: directory
+
+    - name: Write result to file  # noqa: risky-file-permissions
+      ansible.builtin.copy:
+        content: "{{ similarity_score }}"
+        dest: "{{ playbook_dir }}/out/day1_result2.txt"

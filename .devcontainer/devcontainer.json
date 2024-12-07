@@ -29,9 +29,9 @@
     }
   },
 
-  "workspaceMount": "source=${localWorkspaceFolder},target=/workspace/collections/ansible_collections,type=bind",
-  "workspaceFolder": "/workspace/collections/ansible_collections",
+  "workspaceMount": "source=${localWorkspaceFolder},target=/workspace/collections/ansible_collections/ifalatik/aoc2024,type=bind",
+  "workspaceFolder": "/workspace/collections/ansible_collections/ifalatik/aoc2024",
 
   "postCreateCommand": "pip3 install --user -r ./.devcontainer/requirements.txt",
-  "postAttachCommand": "ansible-galaxy install -r ./ifalatik/aoc2024/extensions/molecule/default/requirements.yml"
+  "postAttachCommand": "ansible-galaxy install -r ./extensions/molecule/default/requirements.yml"
 }
