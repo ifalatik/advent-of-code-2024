@@ -2,7 +2,7 @@
 
 - name: Read input
   delegate_to: localhost
-  aoc_input:
+  ifalatik.aoc2024.aoc_input:
     day: 2
     task_number: 1
 
@@ -19,7 +19,7 @@
 
 - name: Write result
   delegate_to: localhost
-  aoc_result:
+  ifalatik.aoc2024.aoc_result:
     day: 2
     task_number: 1
     result: "{{ safe_reports }}"
