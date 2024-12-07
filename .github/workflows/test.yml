@@ -6,7 +6,9 @@ jobs:
     steps:
       - uses: actions/checkout@v2
         with:
-          path: "~/.ansible/collections/ansible_collections/ifalatik/aoc2024/${{ github.repository }}"
+          path: "ifalatik/aoc2024/${{ github.repository }}"
+      # move molecule directory to the root of the repository
+      - run: mv "ifalatik/aoc2024/${{ github.repository }}/extensions/molecule" "ifalatik/aoc2024/${{ github.repository }}/molecule"
       - uses: gofrolist/molecule-action@v2
         with:
-          molecule_working_dir: "~/.ansible/collections/ansible_collections/ifalatik/aoc2024/${{ github.repository }}/extensions"
+          molecule_working_dir: "ifalatik/aoc2024/${{ github.repository }}"
