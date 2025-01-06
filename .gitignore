@@ -1,7 +1,4 @@
-# ignore molecule output
-ifalatik/aoc2024/extensions/molecule/default/out/
-
-# ignore playbook output
-ifalatik/aoc2024/playbooks/out/
-
 __pycache__/
+
+# ignore state files
+roles/day6/tmp/state
