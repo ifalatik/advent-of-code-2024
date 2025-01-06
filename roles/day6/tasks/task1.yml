@@ -1,0 +1,56 @@
+---
+
+- name: Read input
+  delegate_to: localhost
+  ifalatik.aoc2024.aoc_input:
+    day: 6
+    task_number: 1
+    single_input: true
+
+- name: View input
+  ansible.builtin.debug:
+    var: input_lines_day6_task1
+
+- name: Create tmp directory
+  delegate_to: localhost
+  ansible.builtin.file:
+    path: "{{ role_path }}/tmp"
+    state: directory
+    mode: '0777'
+    owner: vscode
+    group: vscode
+
+- name: Copy current state
+  delegate_to: localhost
+  ansible.builtin.copy:
+    content: "{{ '\n'.join(input_lines_day6_task1) }}"
+    dest: "{{ role_path }}/tmp/state"
+    mode: '0666'
+    owner: vscode
+    group: vscode
+
+- name: Walk guard
+  ansible.builtin.include_tasks: walk_guard.yml
+  vars:
+    state_file: "{{ role_path }}/tmp/state"
+
+- name: Read state
+  delegate_to: localhost
+  ansible.builtin.slurp:
+    src: "{{ role_path }}/tmp/state"
+  register: state_out
+
+- name: Set state
+  ansible.builtin.set_fact:
+    state: "{{ state_out.content | b64decode }}"
+
+- name: Count amount of fields the guard walked over ('X')
+  ansible.builtin.set_fact:
+    walked_over: "{{ state | regex_findall('X', multiline=True) | length }}"
+
+- name: Write result
+  delegate_to: localhost
+  ifalatik.aoc2024.aoc_result:
+    day: 6
+    task_number: 1
+    result: "{{ walked_over }}"

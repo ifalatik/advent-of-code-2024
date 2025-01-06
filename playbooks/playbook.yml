@@ -41,3 +41,13 @@
       ansible.builtin.include_role:
         name: day2
         tasks_from: task2.yml
+
+- name: Solve day 6 task 1
+  hosts: localhost
+  gather_facts: false
+  tags: [day6, day6_task1]
+  tasks:
+    - name: Solve day 6 task 1
+      ansible.builtin.include_role:
+        name: day6
+        tasks_from: task1.yml

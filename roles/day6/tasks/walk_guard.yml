@@ -1,0 +1,8 @@
+---
+
+- name: Set guard_has_reached_end to false
+  ansible.builtin.set_fact:
+    guard_has_reached_end: false
+
+- name: Take steps
+  ansible.builtin.include_tasks: take_step.yml

@@ -1,0 +1,236 @@
+---
+
+- name: Take step
+  block:
+    # Gets state path in the variable state_file
+    - name: Read current state
+      delegate_to: localhost
+      ansible.builtin.slurp:
+        src: "{{ state_file }}"
+      register: state
+
+    - name: Set state
+      ansible.builtin.set_fact:
+        state_lines: "{{ state.content | b64decode | split('\n') }}"
+
+    # Guard is identified by '^', 'v', '<', or '>'
+    - name: Find guard
+      with_list: "{{ state_lines }}"
+      loop_control:
+        loop_var: state_line
+        extended: true
+        break_when: guard_y_index0
+      ansible.builtin.set_fact:
+        line: "{{ state_line }}"
+        guard_y_index0: "{{ ansible_loop.index0 if state_line | regex_search('[\\^v<>]') else None }}"
+        guard_x_index0_up: "{{ state_line | list | ansible.utils.index_of('eq', '^') if state_line | regex_search('[\\^]') else None }}"
+        guard_x_index0_down: "{{ state_line | list | ansible.utils.index_of('eq', 'v') if state_line | regex_search('[v]') else None }}"
+        guard_x_index0_left: "{{ state_line | list | ansible.utils.index_of('eq', '<') if state_line | regex_search('[<]') else None }}"
+        guard_x_index0_right: "{{ state_line | list | ansible.utils.index_of('eq', '>') if state_line | regex_search('[>]') else None }}"
+
+    - name: Set guard_x_index0 and guard_direction
+      ansible.builtin.set_fact:
+        guard_x_index0: "{{ guard_x_index0_up if guard_x_index0_up else guard_x_index0_down if guard_x_index0_down else guard_x_index0_left if guard_x_index0_left else guard_x_index0_right }}"
+        guard_direction: "{{ 'up' if guard_x_index0_up else 'down' if guard_x_index0_down else 'left' if guard_x_index0_left else 'right' if guard_x_index0_right }}"
+
+    - name: Debug guard
+      changed_when: true
+      ansible.builtin.debug:
+        msg: "Guard found at ({{ guard_x_index0 }}, {{ guard_y_index0 }}) facing {{ guard_direction }}"
+
+    - name: Mark current position as walked
+      ansible.builtin.set_fact:
+        state_lines: "{{ '\n'.join(state_lines) | regex_replace('[\\^v<>]', 'X') | split('\n') }}"
+
+    - name: (Re)set new_state_lines
+      ansible.builtin.set_fact:
+        new_state_lines: []
+
+    - name: Handle upwards facing guard
+      when: guard_direction == 'up'
+      block:
+        - name: Guard has reached top
+          when: guard_y_index0|int == 0
+          ansible.builtin.set_fact:
+            guard_has_reached_end: true
+        - name: Continue walking
+          when: not guard_has_reached_end
+          block:
+            - name: Get next position
+              ansible.builtin.set_fact:
+                next_position: "{{ state_lines[guard_y_index0|int - 1][guard_x_index0|int] }}"
+            - name: Move guard up
+              when: next_position == '.' or next_position == 'X'
+              block:
+                - name: Move guard by copying line by line
+                  with_list: "{{ state_lines }}"
+                  loop_control:
+                    loop_var: state_line
+                    index_var: state_y_index0
+                  ansible.builtin.set_fact:
+                    new_state_lines: "{{ new_state_lines + [state_line]
+                      if state_y_index0|int != guard_y_index0|int - 1
+                      else new_state_lines + [state_line[:guard_x_index0|int] + '^' + state_line[guard_x_index0|int + 1:]] }}"
+                - name: Update state
+                  ansible.builtin.set_fact:
+                    state_lines: "{{ new_state_lines }}"
+            - name: Turn guard to the right
+              when: next_position == '#'
+              block:
+                - name: Turn guard to the right by copying line by line
+                  with_list: "{{ state_lines }}"
+                  loop_control:
+                    loop_var: state_line
+                    index_var: state_y_index0
+                  ansible.builtin.set_fact:
+                    new_state_lines: "{{ new_state_lines + [state_line]
+                      if state_y_index0|int != guard_y_index0|int
+                      else new_state_lines + [state_line[:guard_x_index0|int] + '>' + state_line[guard_x_index0|int + 1:]] }}"
+                - name: Update state
+                  ansible.builtin.set_fact:
+                    state_lines: "{{ new_state_lines }}"
+    - name: Handle downwards facing guard
+      when: guard_direction == 'down'
+      block:
+        - name: Guard has reached bottom
+          when: guard_y_index0|int == state_lines | length - 1
+          ansible.builtin.set_fact:
+            guard_has_reached_end: true
+        - name: Continue walking
+          when: not guard_has_reached_end
+          block:
+            - name: Get next position
+              ansible.builtin.set_fact:
+                next_position: "{{ state_lines[guard_y_index0|int + 1][guard_x_index0|int] }}"
+            - name: Move guard down
+              when: next_position == '.' or next_position == 'X'
+              block:
+                - name: Move guard by copying line by line
+                  with_list: "{{ state_lines }}"
+                  loop_control:
+                    loop_var: state_line
+                    index_var: state_y_index0
+                  ansible.builtin.set_fact:
+                    new_state_lines: "{{ new_state_lines + [state_line]
+                      if state_y_index0|int != guard_y_index0|int + 1
+                      else new_state_lines + [state_line[:guard_x_index0|int] + 'v' + state_line[guard_x_index0|int + 1:]] }}"
+                - name: Update state
+                  ansible.builtin.set_fact:
+                    state_lines: "{{ new_state_lines }}"
+            - name: Turn guard to the right
+              when: next_position == '#'
+              block:
+                - name: Turn guard to the right by copying line by line
+                  with_list: "{{ state_lines }}"
+                  loop_control:
+                    loop_var: state_line
+                    index_var: state_y_index0
+                  ansible.builtin.set_fact:
+                    new_state_lines: "{{ new_state_lines + [state_line]
+                      if state_y_index0|int != guard_y_index0|int
+                      else new_state_lines + [state_line[:guard_x_index0 | int - 1] + '<' + state_line[guard_x_index0 | int:]] }}"
+                - name: Update state
+                  ansible.builtin.set_fact:
+                    state_lines: "{{ new_state_lines }}"
+    - name: Handle left facing guard
+      when: guard_direction == 'left'
+      block:
+        - name: Guard has reached left
+          when: guard_x_index0 == 0
+          ansible.builtin.set_fact:
+            guard_has_reached_end: true
+        - name: Continue walking
+          when: not guard_has_reached_end
+          block:
+            - name: Get next position
+              ansible.builtin.set_fact:
+                next_position: "{{ state_lines[guard_y_index0|int][guard_x_index0|int - 1] }}"
+            - name: Move guard left
+              when: next_position == '.' or next_position == 'X'
+              block:
+                - name: Move guard by copying line by line
+                  with_list: "{{ state_lines }}"
+                  loop_control:
+                    loop_var: state_line
+                    index_var: state_y_index0
+                  ansible.builtin.set_fact:
+                    new_state_lines: "{{ new_state_lines + [state_line]
+                      if state_y_index0|int != guard_y_index0|int
+                      else new_state_lines + [state_line[:guard_x_index0 | int - 1] + '<' + state_line[guard_x_index0 | int:]] }}"
+                - name: Update state
+                  ansible.builtin.set_fact:
+                    state_lines: "{{ new_state_lines }}"
+            - name: Turn guard to the right
+              when: next_position == '#'
+              block:
+                - name: Turn guard to the right by copying line by line
+                  with_list: "{{ state_lines }}"
+                  loop_control:
+                    loop_var: state_line
+                    index_var: state_y_index0
+                  ansible.builtin.set_fact:
+                    new_state_lines: "{{ new_state_lines + [state_line]
+                      if state_y_index0|int != guard_y_index0|int
+                      else new_state_lines + [state_line[:guard_x_index0|int] + '^' + state_line[guard_x_index0|int + 1:]] }}"
+                - name: Update state
+                  ansible.builtin.set_fact:
+                    state_lines: "{{ new_state_lines }}"
+    - name: Handle right facing guard
+      when: guard_direction == 'right'
+      block:
+        - name: Guard has reached right
+          when: guard_x_index0|int == state_lines[0] | length - 1
+          ansible.builtin.set_fact:
+            guard_has_reached_end: true
+        - name: Continue walking
+          when: not guard_has_reached_end
+          block:
+            - name: Get next position
+              ansible.builtin.set_fact:
+                next_position: "{{ state_lines[guard_y_index0|int][guard_x_index0|int + 1] }}"
+            - name: Move guard right
+              when: next_position == '.' or next_position == 'X'
+              block:
+                - name: Move guard by copying line by line
+                  with_list: "{{ state_lines }}"
+                  loop_control:
+                    loop_var: state_line
+                    index_var: state_y_index0
+                  ansible.builtin.set_fact:
+                    new_state_lines: "{{ new_state_lines + [state_line]
+                      if state_y_index0|int != guard_y_index0|int
+                      else new_state_lines + [state_line[:guard_x_index0 | int + 1] + '>' + state_line[guard_x_index0|int + 2:]] }}"
+                - name: Update state
+                  ansible.builtin.set_fact:
+                    state_lines: "{{ new_state_lines }}"
+            - name: Turn guard to the right
+              when: next_position == '#'
+              block:
+                - name: Turn guard to the right by copying line by line
+                  with_list: "{{ state_lines }}"
+                  loop_control:
+                    loop_var: state_line
+                    index_var: state_y_index0
+                  ansible.builtin.set_fact:
+                    new_state_lines: "{{ new_state_lines + [state_line]
+                      if state_y_index0|int != guard_y_index0|int
+                      else new_state_lines + [state_line[:guard_x_index0|int] + 'v' + state_line[guard_x_index0|int + 1:]] }}"
+                - name: Update state
+                  ansible.builtin.set_fact:
+                    state_lines: "{{ new_state_lines }}"
+
+    - name: Write state  # noqa: risky-file-permissions
+      when: true
+      delegate_to: localhost
+      ansible.builtin.copy:
+        content: "{{ '\n'.join(state_lines) }}"
+        dest: "{{ state_file }}"
+
+    - name: Fail if guard has not reached the end so rescue block is executed
+      when: not guard_has_reached_end
+      delegate_to: localhost
+      ansible.builtin.command: /bin/false
+
+  rescue:
+    - name: Recursive include
+      ansible.builtin.include_tasks: take_step.yml
