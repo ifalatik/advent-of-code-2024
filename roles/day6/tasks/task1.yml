@@ -11,23 +11,19 @@
   ansible.builtin.debug:
     var: input_lines_day6_task1
 
-- name: Create tmp directory
+- name: Create tmp directory  # noqa: risky-file-permissions
   delegate_to: localhost
   ansible.builtin.file:
     path: "{{ role_path }}/tmp"
     state: directory
     mode: '0777'
-    owner: vscode
-    group: vscode
 
-- name: Copy current state
+- name: Copy current state  # noqa: risky-file-permissions
   delegate_to: localhost
   ansible.builtin.copy:
     content: "{{ '\n'.join(input_lines_day6_task1) }}"
     dest: "{{ role_path }}/tmp/state"
     mode: '0666'
-    owner: vscode
-    group: vscode
 
 - name: Walk guard
   ansible.builtin.include_tasks: walk_guard.yml
